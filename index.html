@@ -3,32 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>草木有心 · 成语传情 | 植物成语知识图谱</title>
+<title>草木辞 | 植物成语文化基因知识图谱</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
 :root {
-  --bg-deep:      #040810;
-  --bg-mid:       #080f1a;
-  --bg-panel:     rgba(6, 12, 26, 0.93);
-  --bg-card:      rgba(14, 24, 48, 0.88);
-  --border:       rgba(60, 120, 180, 0.22);
-  --border-glow:  rgba(80, 160, 255, 0.4);
-  --text-primary: #d8eaf8;
-  --text-muted:   #5a7a9a;
-  --text-dim:     #2a4a6a;
-  --accent-blue:  #4da8ff;
-  --accent-cyan:  #38f7d0;
-  --accent-gold:  #f0c040;
-  --accent-rose:  #e86080;
-  --accent-violet:#b870ff;
-  --glow-blue:    0 0 20px rgba(77,168,255,0.35);
-  --glow-cyan:    0 0 16px rgba(56,247,208,0.4);
+  --bg-deep:      #0c1a0f;
+  --bg-mid:       #132018;
+  --bg-panel:     rgba(16, 34, 18, 0.91);
+  --bg-card:      rgba(26, 46, 22, 0.86);
+  --border:       rgba(118, 174, 100, 0.24);
+  --border-glow:  rgba(168, 220, 130, 0.45);
+  --text-primary: #e8dfc4;
+  --text-muted:   #C0F485;
+  --text-dim:     #C7C8B3;
+  --accent-blue:  #9ed870;
+  --accent-cyan:  #d4c45c;
+  --accent-gold:  #e09a3a;
+  --accent-rose:  #e07858;
+  --accent-violet:#c07888;
+  --glow-blue:    0 0 20px rgba(130,200,80,0.32);
+  --glow-cyan:    0 0 16px rgba(200,180,60,0.36);
   --radius-lg:    22px;
   --radius-md:    14px;
   --transition:   0.25s cubic-bezier(0.4,0,0.2,1);
 }
+
 
 * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
 
@@ -49,7 +50,7 @@ body {
 #header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 200;
   height: 58px;
-  background: linear-gradient(180deg, rgba(4,8,16,0.98) 0%, rgba(4,8,16,0.85) 100%);
+  background: linear-gradient(180deg, rgba(12,28,14,0.82) 0%, rgba(8,18,10,0.96) 100%);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(20px) saturate(1.8);
   display: flex; align-items: center; padding: 0 24px; gap: 20px;
@@ -57,25 +58,25 @@ body {
 #header::after {
   content: '';
   position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent-blue), var(--accent-cyan), transparent);
+  background: linear-gradient(90deg, transparent, #a8d860, #d4c058, #e08858, transparent);
   animation: shimmer 4s ease-in-out infinite;
 }
 @keyframes shimmer {
   0%,100% { opacity: 0.3; } 50% { opacity: 0.9; }
 }
 
-.header-brand { display: flex; flex-direction: column; gap: 1px; }
+.header-brand { display: flex; flex-direction: column; gap: 5px; }
 
 #header h1 {
-  font-family: 'Noto Serif SC', serif;
-  font-size: 1.15rem; font-weight: 700; letter-spacing: 3px;
-  background: linear-gradient(135deg, #a0d4ff 0%, var(--accent-cyan) 45%, #e8a0e0 100%);
+  font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+  font-size: 1.4rem; font-weight: 1000; letter-spacing: 3px;
+  background: linear-gradient(135deg, #e8c870 0%, #a0d870 42%, #e89060 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
   white-space: nowrap;
 }
 .header-sub {
-  font-size: 0.62rem; color: var(--text-muted); letter-spacing: 2px;
-  font-weight: 300;
+  font-size: 0.9rem; color: var(--text-muted); letter-spacing: 2px;
+  font-weight: 500;
 }
 
 /* Stats */
@@ -106,13 +107,13 @@ body {
 }
 
 .panel-title {
-  font-size: 0.68rem; color: var(--text-muted); letter-spacing: 2px;
+  font-size: 1rem; color: var(--text-muted); letter-spacing: 2px;
   text-transform: uppercase; margin-bottom: 12px;
   display: flex; align-items: center; gap: 8px;
 }
 .panel-title::before {
   content: ''; width: 20px; height: 1px;
-  background: linear-gradient(90deg, var(--accent-blue), transparent);
+  background: linear-gradient(90deg, var(--accent-gold), transparent);
 }
 
 .legend { display: flex; flex-direction: column; gap: 4px; max-height: 280px; overflow-y: auto; }
@@ -127,8 +128,8 @@ body {
   border: 1px solid transparent;
 }
 .legend-item:hover {
-  background: rgba(77,168,255,0.06);
-  border-color: rgba(77,168,255,0.15);
+  background: rgba(130,200,80,0.07);
+  border-color: rgba(140,200,90,0.22);
 }
 .legend-item.hidden { opacity: 0.28; }
 
@@ -153,7 +154,7 @@ body {
 }
 .filter-btn {
   padding: 5px 11px;
-  background: rgba(14,24,48,0.6);
+  background: rgba(20,40,18,0.65);
   border: 1px solid var(--border);
   border-radius: 20px; color: var(--text-muted);
   font-size: 10.5px; cursor: pointer;
@@ -161,11 +162,11 @@ body {
   letter-spacing: 0.5px;
 }
 .filter-btn:hover {
-  background: rgba(77,168,255,0.1);
+  background: rgba(130,200,80,0.12);
   border-color: var(--accent-blue); color: var(--accent-blue);
 }
 .filter-btn.active {
-  background: rgba(77,168,255,0.15);
+  background: rgba(130,200,80,0.18);
   border-color: var(--accent-blue); color: var(--accent-blue);
 }
 
@@ -187,11 +188,11 @@ body {
 .search-wrap::before {
   content: '⌕';
   position: absolute; left: 12px;
-  color: var(--text-muted); font-size: 14px; z-index: 1;
+  color: var(--text-muted); font-size: 16px; z-index: 1;
   pointer-events: none;
 }
 #search-input {
-  width: 100%; background: rgba(0,0,0,0.4);
+  width: 100%; background: rgba(8,20,10,0.55);
   border: 1px solid var(--border); border-radius: 30px;
   color: var(--text-primary); padding: 8px 12px 8px 34px;
   font-size: 12.5px; outline: none;
@@ -201,7 +202,7 @@ body {
 #search-input::placeholder { color: var(--text-dim); }
 #search-input:focus {
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(77,168,255,0.12), var(--glow-blue);
+  box-shadow: 0 0 0 3px rgba(130,200,80,0.14), var(--glow-blue);
 }
 
 #search-results { margin-top: 8px; max-height: 220px; overflow-y: auto; }
@@ -216,8 +217,8 @@ body {
   transition: var(--transition); color: var(--text-primary);
 }
 .search-result:hover {
-  background: rgba(77,168,255,0.07);
-  border-color: rgba(77,168,255,0.2);
+  background: rgba(130,200,80,0.08);
+  border-color: rgba(140,200,90,0.22);
 }
 .sr-tag {
   font-size: 10px; padding: 2px 8px; border-radius: 20px;
@@ -228,7 +229,7 @@ body {
 #info-panel {
   position: fixed; top: 58px; right: 0; bottom: 0; z-index: 300;
   width: 400px;
-  background: linear-gradient(180deg, rgba(4,10,22,0.98) 0%, rgba(6,14,30,0.97) 100%);
+  background: linear-gradient(180deg, rgba(8,18,10,0.99) 0%, rgba(12,26,14,0.98) 100%);
   border-left: 1px solid var(--border);
   backdrop-filter: blur(28px);
   box-shadow: -20px 0 60px rgba(0,0,0,0.6);
@@ -249,7 +250,7 @@ body {
 .info-header {
   padding: 20px 22px 0;
   position: sticky; top: 0; z-index: 10;
-  background: linear-gradient(180deg, rgba(4,10,22,1) 80%, transparent);
+  background: linear-gradient(180deg, rgba(8,18,10,1) 80%, transparent);
 }
 .info-close {
   position: absolute; top: 16px; right: 18px;
@@ -279,7 +280,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 14px; padding: 13px 16px;
   margin-bottom: 10px; line-height: 1.75;
-  font-size: 13px; color: var(--text-primary);
+  font-size: 14px; color: var(--text-primary);
 }
 .info-card.meaning { border-left: 3px solid var(--accent-blue); }
 .info-card.source  { border-left: 3px solid var(--accent-cyan); }
@@ -288,12 +289,12 @@ body {
 .info-card.pinyin  { border-left: 3px solid var(--accent-rose); }
 
 .card-label {
-  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  font-size: 18px; letter-spacing: 2px; text-transform: uppercase;
   color: var(--text-muted); margin-bottom: 5px; font-weight: 600;
 }
 
 .rel-section-title {
-  font-size: 11px; letter-spacing: 2px; color: var(--text-muted);
+  font-size: 18px; letter-spacing: 2px; color: var(--text-muted);
   text-transform: uppercase; margin: 18px 0 10px;
   display: flex; align-items: center; gap: 10px;
 }
@@ -310,26 +311,27 @@ body {
   transition: var(--transition); font-size: 12.5px;
 }
 .rel-item:hover {
-  background: rgba(77,168,255,0.07);
-  border-color: rgba(77,168,255,0.2);
+  background: rgba(130,200,80,0.07);
+  border-color: rgba(140,200,90,0.22);
   transform: translateX(4px);
 }
 .rel-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .rel-name { flex: 1; color: var(--text-primary); }
-.rel-type { font-size: 10px; color: var(--text-muted); margin-right: 4px; }
+.rel-type { font-size: 14px; color: var(--text-muted); margin-right: 4px; }
 .rel-tag {
-  font-size: 9.5px; padding: 2px 8px; border-radius: 20px;
-  background: rgba(77,168,255,0.12); color: var(--accent-blue);
-  border: 1px solid rgba(77,168,255,0.2);
+  font-size: 13px; padding: 2px 8px; border-radius: 20px;
+  background: rgba(130,200,70,0.14); color: var(--accent-blue);
+  border: 1px solid rgba(140,200,90,0.25);
 }
 
 /* ═══════════ SVG CANVAS ═══════════ */
 #svg-container {
   position: fixed; inset: 0; z-index: 1;
   background:
-    radial-gradient(ellipse 70% 70% at 20% 30%, rgba(8,20,50,0.8), transparent),
-    radial-gradient(ellipse 50% 50% at 80% 70%, rgba(10,30,20,0.6), transparent),
-    #040810;
+    radial-gradient(ellipse 68% 60% at 22% 32%, rgba(49, 38, 26, 0.75), transparent),
+    radial-gradient(ellipse 52% 52% at 78% 68%, rgba(65, 53, 39, 0.55), transparent),
+    radial-gradient(ellipse 40% 38% at 52% 8%,  rgba(38, 30, 20, 0.45), transparent),
+    #2C2419;
 }
 svg { width: 100%; height: 100%; cursor: grab; }
 svg:active { cursor: grabbing; }
@@ -359,7 +361,7 @@ svg:active { cursor: grabbing; }
   display: flex; align-items: center; justify-content: center;
 }
 .zoom-btn:hover {
-  background: rgba(77,168,255,0.15); border-color: var(--accent-blue);
+  background: rgba(130,200,80,0.16); border-color: var(--accent-blue);
   color: var(--accent-blue); box-shadow: var(--glow-blue);
 }
 
@@ -385,22 +387,22 @@ svg:active { cursor: grabbing; }
 /* ═══════════ LOADING ═══════════ */
 #loading {
   position: fixed; inset: 0; z-index: 1000;
-  background: var(--bg-deep);
+  background: #0c1a0f;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 24px;
 }
 .loader-ring {
   width: 60px; height: 60px; border-radius: 50%;
   border: 2px solid var(--border);
-  border-top-color: var(--accent-cyan);
+  border-top-color: #a8d860;
   animation: spin 1s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loader-text {
-  font-size: 0.85rem; color: var(--text-muted); letter-spacing: 3px;
+  font-size: 1rem; color: var(--text-muted); letter-spacing: 3px;
 }
 .loader-sub {
-  font-size: 0.7rem; color: var(--text-dim); letter-spacing: 2px;
+  font-size: 1rem; color: var(--text-dim); letter-spacing: 2px;
 }
 
 /* ═══════════ SCROLLBARS ═══════════ */
@@ -416,8 +418,8 @@ svg:active { cursor: grabbing; }
 <div id="loading">
   <div class="loader-ring"></div>
   <div>
-    <div class="loader-text">草 木 有 心</div>
-    <div class="loader-sub" style="margin-top:4px;text-align:center">正在构建知识图谱…</div>
+    <div class="loader-text">草木辞</div>
+    <div class="loader-sub" style="margin-top:8px;text-align:center">正在构建知识图谱…</div>
   </div>
 </div>
 
@@ -427,8 +429,8 @@ svg:active { cursor: grabbing; }
 <!-- Header -->
 <div id="header">
   <div class="header-brand">
-    <h1>🌸 草木有心 · 成语传情</h1>
-    <div class="header-sub">植物 · 分类学 · 成语 · 知识图谱</div>
+    <h1>🌸 草木辞</h1>
+    <div class="header-sub">植物成语文化基因知识图谱</div>
   </div>
   <div id="stats">
     <div class="stat-pill">
@@ -455,9 +457,9 @@ svg:active { cursor: grabbing; }
   <div class="panel-title">节点图例 · 点击筛选</div>
   <div class="legend" id="legend"></div>
   <div id="filter-controls">
-    <button class="filter-btn" id="btn-tax-only">🌱 仅分类层级</button>
-    <button class="filter-btn" id="btn-show-all">✦ 全部显示</button>
-    <button class="filter-btn" id="btn-reset">⟳ 重置视图</button>
+    <button class="filter-btn" id="btn-tax-only">仅分类层级</button>
+    <button class="filter-btn" id="btn-show-all">全部显示</button>
+    <button class="filter-btn" id="btn-reset">重置视图</button>
   </div>
 </div>
 
@@ -500,20 +502,20 @@ svg:active { cursor: grabbing; }
 //  TYPE CONFIG
 // ══════════════════════════════════════════════════════
 const TYPE_CONFIG = {
-  '门':   { color: '#ff7060', size: 32, order: 0, shape: 'circle' },
-  '纲':   { color: '#ffa040', size: 26, order: 1, shape: 'circle' },
-  '亚纲': { color: '#f0d040', size: 21, order: 2, shape: 'circle' },
-  '目':   { color: '#60cc70', size: 17, order: 3, shape: 'circle' },
-  '科':   { color: '#4da8ff', size: 14, order: 4, shape: 'circle' },
-  '属':   { color: '#b870ff', size: 12, order: 5, shape: 'circle' },
-  '植物': { color: '#e85d9d', size: 11, order: 6, shape: 'flower' },
-  '成语': { color: '#38f7d0', size: 8,  order: 7, shape: 'rect' }
+  '门':   { color: '#d47248', size: 32, order: 0, shape: 'circle' },
+  '纲':   { color: '#d49a3a', size: 26, order: 1, shape: 'circle' },
+  '亚纲': { color: '#b8c040', size: 21, order: 2, shape: 'circle' },
+  '目':   { color: '#60b868', size: 17, order: 3, shape: 'circle' },
+  '科':   { color: '#48b8a0', size: 14, order: 4, shape: 'circle' },
+  '属':   { color: '#9870c8', size: 12, order: 5, shape: 'circle' },
+  '植物': { color: '#d8685c', size: 11, order: 6, shape: 'flower' },
+  '成语': { color: '#c8b84e', size: 8,  order: 7, shape: 'rect' }
 };
 
 const EDGE_COLOR = {
-  '属于':    'rgba(80,150,200,0.6)',
-  '归属于':  'rgba(60,100,160,0.5)',
-  '含有植物':'rgba(40,180,120,0.55)'
+  '属于':    'rgba(160,130,55,0.52)',
+  '归属于':  'rgba(80,150,85,0.45)',
+  '含有植物':'rgba(190,90,65,0.48)'
 };
 
 // ══════════════════════════════════════════════════════
@@ -533,7 +535,7 @@ const EDGE_COLOR = {
       vx: (Math.random() - 0.5) * 0.15,
       vy: (Math.random() - 0.5) * 0.15,
       alpha: Math.random() * 0.35 + 0.05,
-      hue: [200, 180, 160, 220][Math.floor(Math.random()*4)]
+      hue: [85, 105, 48, 38][Math.floor(Math.random()*4)]
     });
   }
   function draw() {
@@ -695,10 +697,10 @@ function renderGraph() {
       tooltip.style.display = 'block';
       tooltip.style.opacity = '0';
       let tip = `<strong>${d.label}</strong>`;
-      if (d.pinyin) tip += `<br><span style="color:#f0d060;font-size:11px">${d.pinyin}</span>`;
-      if (d.latin) tip += `<br><em style="color:#8090b0;font-size:11px">${d.latin}</em>`;
+      if (d.pinyin) tip += `<br><span style="color:#d4c060;font-size:11px">${d.pinyin}</span>`;
+      if (d.latin) tip += `<br><em style="color:#809a70;font-size:11px">${d.latin}</em>`;
       const deg = (adjMap[d.id] || []).length;
-      tip += `<br><span style="color:#4da8ff;font-size:10px">关联 ${deg} 个节点</span>`;
+      tip += `<br><span style="color:#88c860;font-size:10px">关联 ${deg} 个节点</span>`;
       tooltip.innerHTML = tip;
       setTimeout(() => { tooltip.style.opacity = '1'; }, 10);
     })
@@ -738,10 +740,10 @@ function renderGraph() {
     })
     .attr('fill', d => {
       const o = TYPE_CONFIG[d.type]?.order || 7;
-      return o <= 2 ? '#f0e8d0' : '#b8ccdc';
+      return o <= 2 ? '#f0e8c4' : '#b8d4a0';
     })
     .attr('font-weight', d => TYPE_CONFIG[d.type]?.order <= 3 ? '600' : '400')
-    .attr('stroke', '#040810').attr('stroke-width', 2.5)
+    .attr('stroke', '#0c1a0f').attr('stroke-width', 2.5)
     .attr('paint-order','stroke fill')
     .attr('pointer-events','none');
 
