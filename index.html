@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>草木有心 · 成语传情 | 植物成语知识图谱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+:root {
+  --bg-deep:      #040810;
+  --bg-mid:       #080f1a;
+  --bg-panel:     rgba(6, 12, 26, 0.93);
+  --bg-card:      rgba(14, 24, 48, 0.88);
+  --border:       rgba(60, 120, 180, 0.22);
+  --border-glow:  rgba(80, 160, 255, 0.4);
+  --text-primary: #d8eaf8;
+  --text-muted:   #5a7a9a;
+  --text-dim:     #2a4a6a;
+  --accent-blue:  #4da8ff;
+  --accent-cyan:  #38f7d0;
+  --accent-gold:  #f0c040;
+  --accent-rose:  #e86080;
+  --accent-violet:#b870ff;
+  --glow-blue:    0 0 20px rgba(77,168,255,0.35);
+  --glow-cyan:    0 0 16px rgba(56,247,208,0.4);
+  --radius-lg:    22px;
+  --radius-md:    14px;
+  --transition:   0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'Noto Serif SC', 'PingFang SC', 'Microsoft YaHei', serif;
+  overflow: hidden;
+  cursor: default;
+}
+
+/* ═══════════ PARTICLE CANVAS BACKGROUND ═══════════ */
+#particle-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+
+/* ═══════════ HEADER ═══════════ */
+#header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 58px;
+  background: linear-gradient(180deg, rgba(4,8,16,0.98) 0%, rgba(4,8,16,0.85) 100%);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(20px) saturate(1.8);
+  display: flex; align-items: center; padding: 0 24px; gap: 20px;
+}
+#header::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-blue), var(--accent-cyan), transparent);
+  animation: shimmer 4s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%,100% { opacity: 0.3; } 50% { opacity: 0.9; }
+}
+
+.header-brand { display: flex; flex-direction: column; gap: 1px; }
+
+#header h1 {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 1.15rem; font-weight: 700; letter-spacing: 3px;
+  background: linear-gradient(135deg, #a0d4ff 0%, var(--accent-cyan) 45%, #e8a0e0 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  white-space: nowrap;
+}
+.header-sub {
+  font-size: 0.62rem; color: var(--text-muted); letter-spacing: 2px;
+  font-weight: 300;
+}
+
+/* Stats */
+#stats { margin-left: auto; display: flex; gap: 12px; align-items: center; }
+.stat-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 40px; padding: 4px 14px;
+  transition: var(--transition);
+}
+.stat-pill:hover { border-color: var(--border-glow); box-shadow: var(--glow-blue); }
+.stat-icon { font-size: 13px; }
+.stat-val { font-size: 1rem; font-weight: 700; color: var(--accent-blue); font-variant-numeric: tabular-nums; }
+.stat-lbl { font-size: 0.62rem; color: var(--text-muted); letter-spacing: 1px; margin-top: 1px; }
+
+/* ═══════════ LEFT PANEL - LEGEND ═══════════ */
+#controls {
+  position: fixed; top: 72px; left: 14px; z-index: 100;
+  width: 230px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 14px;
+  backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: 0 20px 60px rgba(0,0,4,0.7), inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: var(--transition);
+}
+
+.panel-title {
+  font-size: 0.68rem; color: var(--text-muted); letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-title::before {
+  content: ''; width: 20px; height: 1px;
+  background: linear-gradient(90deg, var(--accent-blue), transparent);
+}
+
+.legend { display: flex; flex-direction: column; gap: 4px; max-height: 280px; overflow-y: auto; }
+.legend::-webkit-scrollbar { width: 3px; }
+.legend::-webkit-scrollbar-track { background: transparent; }
+.legend::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.legend-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px; border-radius: 10px;
+  cursor: pointer; transition: var(--transition);
+  border: 1px solid transparent;
+}
+.legend-item:hover {
+  background: rgba(77,168,255,0.06);
+  border-color: rgba(77,168,255,0.15);
+}
+.legend-item.hidden { opacity: 0.28; }
+
+.legend-shape {
+  width: 20px; height: 20px; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+.legend-shape svg { overflow: visible; }
+
+.legend-label { flex: 1; font-size: 12px; color: var(--text-primary); font-weight: 400; }
+.legend-count {
+  font-size: 10px; color: var(--text-muted);
+  background: rgba(255,255,255,0.04); border-radius: 8px;
+  padding: 1px 7px; font-variant-numeric: tabular-nums;
+}
+
+/* Filter buttons */
+#filter-controls {
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 5px 11px;
+  background: rgba(14,24,48,0.6);
+  border: 1px solid var(--border);
+  border-radius: 20px; color: var(--text-muted);
+  font-size: 10.5px; cursor: pointer;
+  transition: var(--transition); font-family: inherit;
+  letter-spacing: 0.5px;
+}
+.filter-btn:hover {
+  background: rgba(77,168,255,0.1);
+  border-color: var(--accent-blue); color: var(--accent-blue);
+}
+.filter-btn.active {
+  background: rgba(77,168,255,0.15);
+  border-color: var(--accent-blue); color: var(--accent-blue);
+}
+
+/* ═══════════ SEARCH BOX ═══════════ */
+#search-box {
+  position: fixed; top: 72px; right: 14px; z-index: 100;
+  width: 270px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: 0 20px 60px rgba(0,0,4,0.7), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.search-wrap {
+  position: relative; display: flex; align-items: center;
+}
+.search-wrap::before {
+  content: '⌕';
+  position: absolute; left: 12px;
+  color: var(--text-muted); font-size: 14px; z-index: 1;
+  pointer-events: none;
+}
+#search-input {
+  width: 100%; background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border); border-radius: 30px;
+  color: var(--text-primary); padding: 8px 12px 8px 34px;
+  font-size: 12.5px; outline: none;
+  font-family: 'Noto Serif SC', sans-serif;
+  transition: var(--transition);
+}
+#search-input::placeholder { color: var(--text-dim); }
+#search-input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(77,168,255,0.12), var(--glow-blue);
+}
+
+#search-results { margin-top: 8px; max-height: 220px; overflow-y: auto; }
+#search-results::-webkit-scrollbar { width: 3px; }
+#search-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.search-result {
+  padding: 7px 12px; border-radius: 10px; cursor: pointer;
+  font-size: 12px; display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 3px;
+  border: 1px solid transparent;
+  transition: var(--transition); color: var(--text-primary);
+}
+.search-result:hover {
+  background: rgba(77,168,255,0.07);
+  border-color: rgba(77,168,255,0.2);
+}
+.sr-tag {
+  font-size: 10px; padding: 2px 8px; border-radius: 20px;
+  font-weight: 500;
+}
+
+/* ═══════════ INFO PANEL (RIGHT SIDE) ═══════════ */
+#info-panel {
+  position: fixed; top: 58px; right: 0; bottom: 0; z-index: 300;
+  width: 400px;
+  background: linear-gradient(180deg, rgba(4,10,22,0.98) 0%, rgba(6,14,30,0.97) 100%);
+  border-left: 1px solid var(--border);
+  backdrop-filter: blur(28px);
+  box-shadow: -20px 0 60px rgba(0,0,0,0.6);
+  display: none; overflow-y: auto; overflow-x: hidden;
+  transform: translateX(20px);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+}
+#info-panel.visible {
+  display: block;
+  transform: translateX(0);
+  opacity: 1;
+}
+#info-panel::-webkit-scrollbar { width: 4px; }
+#info-panel::-webkit-scrollbar-track { background: transparent; }
+#info-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.info-header {
+  padding: 20px 22px 0;
+  position: sticky; top: 0; z-index: 10;
+  background: linear-gradient(180deg, rgba(4,10,22,1) 80%, transparent);
+}
+.info-close {
+  position: absolute; top: 16px; right: 18px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  color: var(--text-muted); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.info-close:hover { background: rgba(255,80,80,0.15); border-color: #ff5050; color: #ff8080; }
+
+.info-body { padding: 16px 22px 30px; }
+
+.type-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 14px; border-radius: 40px; font-size: 11px;
+  font-weight: 600; margin-bottom: 12px; letter-spacing: 1px;
+}
+
+.info-title {
+  font-size: 1.7rem; font-weight: 700; letter-spacing: 1px;
+  color: var(--text-primary); margin-bottom: 14px; line-height: 1.3;
+}
+
+.info-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 14px; padding: 13px 16px;
+  margin-bottom: 10px; line-height: 1.75;
+  font-size: 13px; color: var(--text-primary);
+}
+.info-card.meaning { border-left: 3px solid var(--accent-blue); }
+.info-card.source  { border-left: 3px solid var(--accent-cyan); }
+.info-card.example { border-left: 3px solid var(--accent-gold); }
+.info-card.latin   { border-left: 3px solid var(--accent-violet); font-style: italic; }
+.info-card.pinyin  { border-left: 3px solid var(--accent-rose); }
+
+.card-label {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 5px; font-weight: 600;
+}
+
+.rel-section-title {
+  font-size: 11px; letter-spacing: 2px; color: var(--text-muted);
+  text-transform: uppercase; margin: 18px 0 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.rel-section-title::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
+}
+
+.rel-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: 12px;
+  cursor: pointer; margin-bottom: 5px;
+  border: 1px solid transparent;
+  transition: var(--transition); font-size: 12.5px;
+}
+.rel-item:hover {
+  background: rgba(77,168,255,0.07);
+  border-color: rgba(77,168,255,0.2);
+  transform: translateX(4px);
+}
+.rel-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.rel-name { flex: 1; color: var(--text-primary); }
+.rel-type { font-size: 10px; color: var(--text-muted); margin-right: 4px; }
+.rel-tag {
+  font-size: 9.5px; padding: 2px 8px; border-radius: 20px;
+  background: rgba(77,168,255,0.12); color: var(--accent-blue);
+  border: 1px solid rgba(77,168,255,0.2);
+}
+
+/* ═══════════ SVG CANVAS ═══════════ */
+#svg-container {
+  position: fixed; inset: 0; z-index: 1;
+  background:
+    radial-gradient(ellipse 70% 70% at 20% 30%, rgba(8,20,50,0.8), transparent),
+    radial-gradient(ellipse 50% 50% at 80% 70%, rgba(10,30,20,0.6), transparent),
+    #040810;
+}
+svg { width: 100%; height: 100%; cursor: grab; }
+svg:active { cursor: grabbing; }
+
+.node { cursor: pointer; }
+.link { stroke-opacity: 0.45; stroke-linecap: round; transition: stroke-opacity 0.2s; }
+.dimmed { opacity: 0.08 !important; }
+
+/* Node hover glow via CSS filter */
+.node:hover { filter: brightness(1.4) drop-shadow(0 0 8px currentColor); }
+
+/* ═══════════ ZOOM CONTROLS ═══════════ */
+#zoom-controls {
+  position: fixed; bottom: 24px; left: 18px; z-index: 100;
+  display: flex; gap: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  padding: 8px 14px; border-radius: 40px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+.zoom-btn {
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  width: 30px; height: 30px; border-radius: 50%;
+  color: var(--text-primary); font-weight: bold; cursor: pointer;
+  font-size: 16px; transition: var(--transition);
+  display: flex; align-items: center; justify-content: center;
+}
+.zoom-btn:hover {
+  background: rgba(77,168,255,0.15); border-color: var(--accent-blue);
+  color: var(--accent-blue); box-shadow: var(--glow-blue);
+}
+
+/* ═══════════ NODE LABELS ═══════════ */
+.node-label {
+  font-family: 'Noto Serif SC', serif;
+  paint-order: stroke fill;
+  pointer-events: none;
+}
+
+/* ═══════════ TOOLTIP ═══════════ */
+#tooltip {
+  position: fixed; z-index: 500; pointer-events: none;
+  background: var(--bg-panel); border: 1px solid var(--border-glow);
+  border-radius: 10px; padding: 8px 14px; font-size: 12px;
+  color: var(--text-primary); backdrop-filter: blur(20px);
+  box-shadow: var(--glow-blue);
+  opacity: 0; transition: opacity 0.15s ease;
+  max-width: 200px; line-height: 1.5;
+  display: none;
+}
+
+/* ═══════════ LOADING ═══════════ */
+#loading {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--bg-deep);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 24px;
+}
+.loader-ring {
+  width: 60px; height: 60px; border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent-cyan);
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-text {
+  font-size: 0.85rem; color: var(--text-muted); letter-spacing: 3px;
+}
+.loader-sub {
+  font-size: 0.7rem; color: var(--text-dim); letter-spacing: 2px;
+}
+
+/* ═══════════ SCROLLBARS ═══════════ */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+  <script src="graph-data.js" defer></script>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loading">
+  <div class="loader-ring"></div>
+  <div>
+    <div class="loader-text">草 木 有 心</div>
+    <div class="loader-sub" style="margin-top:4px;text-align:center">正在构建知识图谱…</div>
+  </div>
+</div>
+
+<!-- Particle background -->
+<canvas id="particle-bg"></canvas>
+
+<!-- Header -->
+<div id="header">
+  <div class="header-brand">
+    <h1>🌸 草木有心 · 成语传情</h1>
+    <div class="header-sub">植物 · 分类学 · 成语 · 知识图谱</div>
+  </div>
+  <div id="stats">
+    <div class="stat-pill">
+      <span class="stat-icon">◈</span>
+      <div><div class="stat-val" id="stat-nodes">—</div><div class="stat-lbl">节 点</div></div>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-icon">⟡</span>
+      <div><div class="stat-val" id="stat-edges">—</div><div class="stat-lbl">关 系</div></div>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-icon">🌿</span>
+      <div><div class="stat-val" id="stat-plants">—</div><div class="stat-lbl">植 物</div></div>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-icon">📜</span>
+      <div><div class="stat-val" id="stat-idioms">—</div><div class="stat-lbl">成 语</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Left legend panel -->
+<div id="controls">
+  <div class="panel-title">节点图例 · 点击筛选</div>
+  <div class="legend" id="legend"></div>
+  <div id="filter-controls">
+    <button class="filter-btn" id="btn-tax-only">🌱 仅分类层级</button>
+    <button class="filter-btn" id="btn-show-all">✦ 全部显示</button>
+    <button class="filter-btn" id="btn-reset">⟳ 重置视图</button>
+  </div>
+</div>
+
+<!-- Search box -->
+<div id="search-box">
+  <div class="search-wrap">
+    <input type="text" id="search-input" placeholder="搜索植物、成语或拼音…" autocomplete="off" />
+  </div>
+  <div id="search-results"></div>
+</div>
+
+<!-- Info panel (right side drawer) -->
+<div id="info-panel">
+  <div class="info-header">
+    <button class="info-close" id="close-info">✕</button>
+  </div>
+  <div class="info-body" id="info-content"></div>
+</div>
+
+<!-- Tooltip -->
+<div id="tooltip"></div>
+
+<!-- SVG canvas -->
+<div id="svg-container"><svg id="graph-svg"></svg></div>
+
+<!-- Zoom controls -->
+<div id="zoom-controls">
+  <button class="zoom-btn" id="zoom-in">+</button>
+  <button class="zoom-btn" id="zoom-out">−</button>
+  <button class="zoom-btn" id="zoom-fit" title="适应画布">⊞</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  GRAPH DATA (from Neo4j / Cypher import)
+// ══════════════════════════════════════════════════════
+;
+
+// ══════════════════════════════════════════════════════
+//  TYPE CONFIG
+// ══════════════════════════════════════════════════════
+const TYPE_CONFIG = {
+  '门':   { color: '#ff7060', size: 32, order: 0, shape: 'circle' },
+  '纲':   { color: '#ffa040', size: 26, order: 1, shape: 'circle' },
+  '亚纲': { color: '#f0d040', size: 21, order: 2, shape: 'circle' },
+  '目':   { color: '#60cc70', size: 17, order: 3, shape: 'circle' },
+  '科':   { color: '#4da8ff', size: 14, order: 4, shape: 'circle' },
+  '属':   { color: '#b870ff', size: 12, order: 5, shape: 'circle' },
+  '植物': { color: '#e85d9d', size: 11, order: 6, shape: 'flower' },
+  '成语': { color: '#38f7d0', size: 8,  order: 7, shape: 'rect' }
+};
+
+const EDGE_COLOR = {
+  '属于':    'rgba(80,150,200,0.6)',
+  '归属于':  'rgba(60,100,160,0.5)',
+  '含有植物':'rgba(40,180,120,0.55)'
+};
+
+// ══════════════════════════════════════════════════════
+//  PARTICLES
+// ══════════════════════════════════════════════════════
+(function initParticles() {
+  const canvas = document.getElementById('particle-bg');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  for (let i = 0; i < 70; i++) {
+    particles.push({
+      x: Math.random() * 1920, y: Math.random() * 1080,
+      r: Math.random() * 1.2 + 0.3,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15,
+      alpha: Math.random() * 0.35 + 0.05,
+      hue: [200, 180, 160, 220][Math.floor(Math.random()*4)]
+    });
+  }
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `hsla(${p.hue}, 80%, 70%, ${p.alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ══════════════════════════════════════════════════════
+//  ADJACENCY MAP
+// ══════════════════════════════════════════════════════
+let adjMap = {};
+function buildAdjacency() {
+  adjMap = {};
+  GRAPH_DATA.edges.forEach(e => {
+    if (!adjMap[e.source]) adjMap[e.source] = [];
+    if (!adjMap[e.target]) adjMap[e.target] = [];
+    adjMap[e.source].push({ neighbor: e.target, rel: e.relation });
+    adjMap[e.target].push({ neighbor: e.source, rel: e.relation });
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  CUSTOM SHAPES
+// ══════════════════════════════════════════════════════
+function applyCustomShape(sel, d) {
+  const cfg = TYPE_CONFIG[d.type];
+  const r = cfg?.size || 8;
+  const color = cfg?.color || '#aaa';
+  const np = { 'pointer-events': 'none' };
+
+  if (cfg?.shape === 'flower') {
+    // Outer soft glow ring
+    sel.append('circle').attr('r', r + 4)
+      .attr('fill', 'none').attr('stroke', color)
+      .attr('stroke-width', 0.6).attr('opacity', 0.3).attr(np);
+    // Flower petals
+    sel.append('path').attr('d', () => {
+      let p = `M 0 ${-r}`;
+      for (let i = 1; i <= 6; i++) {
+        const a = i * Math.PI / 3;
+        const x = r * Math.sin(a), y = -r * Math.cos(a);
+        p += ` Q ${x*0.55} ${y*0.55} ${x} ${y}`;
+      }
+      return p + ' Z';
+    }).attr('fill', color).attr('stroke', 'rgba(255,255,255,0.5)')
+      .attr('stroke-width', 0.7).attr(np);
+    // Center
+    sel.append('circle').attr('r', r * 0.32)
+      .attr('fill', '#fff9c0').attr(np);
+  } else if (cfg?.shape === 'rect') {
+    // Glow
+    sel.append('rect')
+      .attr('x', -r-2).attr('y', -r*0.9)
+      .attr('width', (r+2)*2).attr('height', r*1.8)
+      .attr('rx', 5).attr('fill', color).attr('opacity', 0.15).attr(np);
+    // Main
+    sel.append('rect')
+      .attr('x', -r).attr('y', -r*0.75)
+      .attr('width', r*2).attr('height', r*1.5)
+      .attr('rx', 3).attr('fill', color)
+      .attr('stroke', 'rgba(0,0,0,0.4)').attr('stroke-width', 0.8).attr(np);
+  } else {
+    // Large nodes: add outer glow ring
+    if (r >= 17) {
+      sel.append('circle').attr('r', r + 5)
+        .attr('fill', 'none').attr('stroke', color)
+        .attr('stroke-width', 0.8).attr('opacity', 0.25).attr(np);
+    }
+    sel.append('circle').attr('r', r)
+      .attr('fill', color)
+      .attr('stroke', 'rgba(255,255,255,0.2)').attr('stroke-width', 1).attr(np);
+    // Inner highlight
+    sel.append('circle').attr('r', r * 0.45)
+      .attr('cx', -r*0.18).attr('cy', -r*0.25)
+      .attr('fill', 'rgba(255,255,255,0.12)').attr(np);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  GRAPH RENDERING
+// ══════════════════════════════════════════════════════
+let simulation, svgEl, g, zoom;
+let visibleTypes = new Set(Object.keys(TYPE_CONFIG));
+let currentHighlightId = null;
+
+function renderGraph() {
+  if (!GRAPH_DATA) return;
+  buildAdjacency();
+  g.selectAll('*').remove();
+
+  const filteredNodes = GRAPH_DATA.nodes.filter(n => visibleTypes.has(n.type));
+  const nodeIds = new Set(filteredNodes.map(n => n.id));
+  const filteredEdges = GRAPH_DATA.edges.filter(e => nodeIds.has(e.source) && nodeIds.has(e.target));
+
+  let nodes = filteredNodes.map(n => ({...n}));
+  let edges = filteredEdges.map(e => ({...e}));
+
+  const W = window.innerWidth, H = window.innerHeight;
+  nodes.forEach(n => {
+    const cfg = TYPE_CONFIG[n.type];
+    const rad = (cfg?.order || 4) * 80 + 40;
+    const angle = Math.random() * Math.PI * 2;
+    n.x = W/2 + rad * Math.cos(angle);
+    n.y = H/2 + rad * Math.sin(angle);
+  });
+
+  simulation = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(edges).id(d => d.id)
+      .distance(d => {
+        const sO = TYPE_CONFIG[d.source.type]?.order || 5;
+        const tO = TYPE_CONFIG[d.target.type]?.order || 5;
+        return Math.abs(sO-tO) === 0 ? 55 : Math.abs(sO-tO) * 42 + 40;
+      }).strength(0.5))
+    .force('charge', d3.forceManyBody().strength(d => {
+      const o = TYPE_CONFIG[d.type]?.order || 6;
+      return o <= 2 ? -500 : o <= 4 ? -200 : o === 5 ? -50 : -18;
+    }))
+    .force('center', d3.forceCenter(W/2, H/2))
+    .force('collision', d3.forceCollide(d => (TYPE_CONFIG[d.type]?.size || 8) + 8))
+    .alphaDecay(0.025);
+
+  // Edges
+  const linkSel = g.append('g').attr('class','links')
+    .selectAll('line').data(edges).join('line')
+    .attr('class','link')
+    .attr('stroke', d => EDGE_COLOR[d.relation] || 'rgba(60,100,140,0.4)')
+    .attr('stroke-width', d => {
+      if (d.relation === '属于') return 2;
+      if (d.relation === '归属于') return 1.5;
+      return 1;
+    });
+
+  // Nodes
+  const tooltip = document.getElementById('tooltip');
+  const nodeGroup = g.append('g').attr('class','nodes')
+    .selectAll('g').data(nodes).join('g')
+    .attr('class','node')
+    .call(d3.drag()
+      .on('start', (e,d) => { if(!e.active) simulation.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+      .on('drag',  (e,d) => { d.fx=e.x; d.fy=e.y; })
+      .on('end',   (e,d) => { if(!e.active) simulation.alphaTarget(0); d.fx=null; d.fy=null; }))
+    .on('click', function(event, d) {
+      event.stopPropagation();
+      showInfo(d); highlightNode(d.id); ensureNodeVisible(d);
+    })
+    .on('mouseover', function(event, d) {
+      const cfg = TYPE_CONFIG[d.type];
+      tooltip.style.display = 'block';
+      tooltip.style.opacity = '0';
+      let tip = `<strong>${d.label}</strong>`;
+      if (d.pinyin) tip += `<br><span style="color:#f0d060;font-size:11px">${d.pinyin}</span>`;
+      if (d.latin) tip += `<br><em style="color:#8090b0;font-size:11px">${d.latin}</em>`;
+      const deg = (adjMap[d.id] || []).length;
+      tip += `<br><span style="color:#4da8ff;font-size:10px">关联 ${deg} 个节点</span>`;
+      tooltip.innerHTML = tip;
+      setTimeout(() => { tooltip.style.opacity = '1'; }, 10);
+    })
+    .on('mousemove', function(event) {
+      const x = event.clientX, y = event.clientY;
+      const W = window.innerWidth, H = window.innerHeight;
+      tooltip.style.left = (x > W-220 ? x - 210 : x + 16) + 'px';
+      tooltip.style.top  = (y > H-100 ? y - 80  : y + 12) + 'px';
+    })
+    .on('mouseleave', function() {
+      tooltip.style.opacity = '0';
+      setTimeout(() => { tooltip.style.display = 'none'; }, 160);
+    });
+
+  nodeGroup.each(function(d) {
+    applyCustomShape(d3.select(this), d);
+  });
+
+  // Labels
+  nodeGroup.append('text')
+    .attr('class','node-label')
+    .text(d => d.label)
+    .attr('text-anchor','middle')
+    .attr('dy', d => {
+      const sz = TYPE_CONFIG[d.type]?.size || 8;
+      return d.type === '成语' ? -sz - 3 : sz + 4;
+    })
+    .attr('font-size', d => {
+      const o = TYPE_CONFIG[d.type]?.order || 7;
+      if (o === 0) return 13;
+      if (o === 1) return 11.5;
+      if (o === 2) return 10.5;
+      if (o === 3) return 10;
+      if (o === 4) return 9.5;
+      if (o === 5) return 9;
+      return 8.5;
+    })
+    .attr('fill', d => {
+      const o = TYPE_CONFIG[d.type]?.order || 7;
+      return o <= 2 ? '#f0e8d0' : '#b8ccdc';
+    })
+    .attr('font-weight', d => TYPE_CONFIG[d.type]?.order <= 3 ? '600' : '400')
+    .attr('stroke', '#040810').attr('stroke-width', 2.5)
+    .attr('paint-order','stroke fill')
+    .attr('pointer-events','none');
+
+  simulation.on('tick', () => {
+    linkSel
+      .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    nodeGroup.attr('transform', d => `translate(${d.x},${d.y})`);
+  });
+
+  svgEl.on('click', () => {
+    clearHighlight();
+    hideInfoPanel();
+  });
+
+  setTimeout(() => fitView(0), 1600);
+}
+
+// ══════════════════════════════════════════════════════
+//  HIGHLIGHT
+// ══════════════════════════════════════════════════════
+function highlightNode(id) {
+  clearHighlight();
+  currentHighlightId = id;
+  const ns = new Set([id]);
+  (adjMap[id] || []).forEach(n => ns.add(n.neighbor));
+  g.selectAll('.node').classed('dimmed', d => !ns.has(d.id));
+  g.selectAll('.link').classed('dimmed', d => d.source.id !== id && d.target.id !== id);
+}
+function clearHighlight() {
+  currentHighlightId = null;
+  g.selectAll('.node').classed('dimmed', false);
+  g.selectAll('.link').classed('dimmed', false);
+}
+
+// ══════════════════════════════════════════════════════
+//  ENSURE VISIBLE
+// ══════════════════════════════════════════════════════
+function ensureNodeVisible(nd) {
+  if (!nd?.x || !nd?.y) return;
+  const t = d3.zoomTransform(svgEl.node());
+  const W = window.innerWidth, H = window.innerHeight;
+  const offsetX = 400 / 2; // panel width offset
+  const tx = (W - 400) / 2 - nd.x * t.k + 400;
+  const ty = H / 2 - nd.y * t.k;
+  svgEl.transition().duration(650).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(t.k));
+}
+
+// ══════════════════════════════════════════════════════
+//  INFO PANEL
+// ══════════════════════════════════════════════════════
+function showInfoPanel() {
+  const panel = document.getElementById('info-panel');
+  panel.style.display = 'block';
+  requestAnimationFrame(() => panel.classList.add('visible'));
+}
+function hideInfoPanel() {
+  const panel = document.getElementById('info-panel');
+  panel.classList.remove('visible');
+  setTimeout(() => { if (!panel.classList.contains('visible')) panel.style.display = 'none'; }, 300);
+}
+
+function showInfo(d) {
+  const content = document.getElementById('info-content');
+  const cfg = TYPE_CONFIG[d.type];
+  const neighbors = adjMap[d.id] || [];
+
+  const relHtml = neighbors.slice(0, 30).map(adj => {
+    const n = GRAPH_DATA.nodes.find(x => x.id === adj.neighbor);
+    if (!n) return '';
+    const nc = TYPE_CONFIG[n.type];
+    return `<div class="rel-item" onclick="focusNodeById('${n.id}')">
+      <span class="rel-dot" style="background:${nc?.color || '#aaa'}"></span>
+      <span class="rel-name">${n.label}</span>
+      <span class="rel-type">[${n.type}]</span>
+      <span class="rel-tag">${adj.rel}</span>
+    </div>`;
+  }).join('');
+
+  let cards = '';
+  if (d.latin)   cards += `<div class="info-card latin"><div class="card-label">拉丁学名</div>🔬 ${d.latin}</div>`;
+  if (d.pinyin)  cards += `<div class="info-card pinyin"><div class="card-label">拼音</div>📖 ${d.pinyin}</div>`;
+  if (d.meaning) cards += `<div class="info-card meaning"><div class="card-label">释 义</div>${d.meaning}</div>`;
+  if (d.source)  cards += `<div class="info-card source"><div class="card-label">出 处</div>${d.source}</div>`;
+  if (d.example) cards += `<div class="info-card example"><div class="card-label">例 句</div>${d.example}</div>`;
+
+  content.innerHTML = `
+    <div class="type-badge" style="background:${cfg?.color}22;color:${cfg?.color};border:1px solid ${cfg?.color}44">
+      ${cfg?.shape === 'flower' ? '🌸' : cfg?.shape === 'rect' ? '📜' : '◉'} ${d.type}
+    </div>
+    <div class="info-title">${d.label}</div>
+    ${cards}
+    <div class="rel-section-title">关 联 节 点 &nbsp;(${neighbors.length})</div>
+    ${relHtml || '<span style="color:var(--text-muted);font-size:12px">暂无关联节点</span>'}
+  `;
+
+  showInfoPanel();
+}
+
+window.focusNodeById = function(id) {
+  const node = GRAPH_DATA.nodes.find(n => n.id === id);
+  if (node) { showInfo(node); highlightNode(node.id); ensureNodeVisible(node); }
+};
+
+// ══════════════════════════════════════════════════════
+//  SEARCH
+// ══════════════════════════════════════════════════════
+function onSearch(e) {
+  const q = e.target.value.trim();
+  const div = document.getElementById('search-results');
+  if (!q) { div.innerHTML = ''; return; }
+  const matched = GRAPH_DATA.nodes.filter(n =>
+    n.label.includes(q) || (n.pinyin && n.pinyin.includes(q)) || (n.latin && n.latin.toLowerCase().includes(q.toLowerCase()))
+  ).slice(0, 14);
+  div.innerHTML = matched.map(n => {
+    const cfg = TYPE_CONFIG[n.type];
+    return `<div class="search-result" onclick="focusNodeById('${n.id}'); document.getElementById('search-results').innerHTML='';">
+      <span>${n.label}</span>
+      <span class="sr-tag" style="background:${cfg?.color}22;color:${cfg?.color};border:1px solid ${cfg?.color}33">${n.type}</span>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  ZOOM & FIT
+// ══════════════════════════════════════════════════════
+function fitView(dur = 600) {
+  if (!g?.node()) return;
+  const bounds = g.node().getBBox();
+  if (!bounds.width) return;
+  const W = window.innerWidth, H = window.innerHeight;
+  const scale = 0.82 / Math.max(bounds.width/W, bounds.height/H);
+  const tx = W/2 - scale*(bounds.x + bounds.width/2);
+  const ty = H/2 - scale*(bounds.y + bounds.height/2);
+  svgEl.transition().duration(dur).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+}
+
+function toggleType(type, el) {
+  if (visibleTypes.has(type)) visibleTypes.delete(type);
+  else visibleTypes.add(type);
+  el.classList.toggle('hidden', !visibleTypes.has(type));
+  renderGraph();
+}
+
+// ══════════════════════════════════════════════════════
+//  LEGEND SHAPES (SVG icons)
+// ══════════════════════════════════════════════════════
+function legendShapeSVG(cfg) {
+  const c = cfg.color;
+  if (cfg.shape === 'flower') {
+    const r = 7;
+    let p = `M 0 ${-r}`;
+    for (let i = 1; i <= 6; i++) {
+      const a = i * Math.PI / 3;
+      const x = r * Math.sin(a), y = -r * Math.cos(a);
+      p += ` Q ${x*0.55} ${y*0.55} ${x} ${y}`;
+    }
+    p += ' Z';
+    return `<svg width="20" height="20" viewBox="-12 -12 24 24">
+      <path d="${p}" fill="${c}" stroke="rgba(255,255,255,0.4)" stroke-width="0.8"/>
+      <circle r="2.5" fill="#fff9c0"/>
+    </svg>`;
+  }
+  if (cfg.shape === 'rect') {
+    return `<svg width="20" height="20" viewBox="-12 -12 24 24">
+      <rect x="-8" y="-6" width="16" height="12" rx="3" fill="${c}" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
+    </svg>`;
+  }
+  const r = Math.min(cfg.size * 0.5, 9);
+  return `<svg width="20" height="20" viewBox="-12 -12 24 24">
+    <circle r="${r}" fill="${c}" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+  </svg>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT UI
+// ══════════════════════════════════════════════════════
+function animateCount(el, target) {
+  let cur = 0;
+  const step = Math.ceil(target / 30);
+  const t = setInterval(() => {
+    cur = Math.min(cur + step, target);
+    el.textContent = cur;
+    if (cur >= target) clearInterval(t);
+  }, 30);
+}
+
+function initUI() {
+  if (!GRAPH_DATA) return;
+  const tc = {};
+  GRAPH_DATA.nodes.forEach(n => tc[n.type] = (tc[n.type] || 0) + 1);
+
+  animateCount(document.getElementById('stat-nodes'), GRAPH_DATA.nodes.length);
+  animateCount(document.getElementById('stat-edges'), GRAPH_DATA.edges.length);
+  animateCount(document.getElementById('stat-plants'), tc['植物'] || 0);
+  animateCount(document.getElementById('stat-idioms'), tc['成语'] || 0);
+
+  const legendDiv = document.getElementById('legend');
+  Object.entries(TYPE_CONFIG).forEach(([type, cfg]) => {
+    const cnt = tc[type] || 0;
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.dataset.type = type;
+    item.innerHTML = `
+      <div class="legend-shape">${legendShapeSVG(cfg)}</div>
+      <span class="legend-label">${type}</span>
+      <span class="legend-count">${cnt}</span>
+    `;
+    item.addEventListener('click', () => toggleType(type, item));
+    legendDiv.appendChild(item);
+  });
+
+  svgEl = d3.select('#graph-svg');
+  zoom = d3.zoom().scaleExtent([0.06, 6])
+    .on('zoom', e => g.attr('transform', e.transform));
+  svgEl.call(zoom);
+  g = svgEl.append('g');
+
+  renderGraph();
+
+  document.getElementById('search-input').addEventListener('input', onSearch);
+  document.getElementById('close-info').addEventListener('click', hideInfoPanel);
+
+  document.getElementById('btn-tax-only').addEventListener('click', () => {
+    visibleTypes = new Set(['门','纲','亚纲','目','科','属']);
+    document.querySelectorAll('.legend-item').forEach(el => el.classList.toggle('hidden', !visibleTypes.has(el.dataset.type)));
+    renderGraph();
+  });
+  document.getElementById('btn-show-all').addEventListener('click', () => {
+    visibleTypes = new Set(Object.keys(TYPE_CONFIG));
+    document.querySelectorAll('.legend-item').forEach(el => el.classList.remove('hidden'));
+    renderGraph();
+  });
+  document.getElementById('btn-reset').addEventListener('click', () => fitView(600));
+  document.getElementById('zoom-in').addEventListener('click', () => svgEl.transition().duration(180).call(zoom.scaleBy, 1.35));
+  document.getElementById('zoom-out').addEventListener('click', () => svgEl.transition().duration(180).call(zoom.scaleBy, 0.72));
+  document.getElementById('zoom-fit').addEventListener('click', () => fitView(500));
+
+  // Hide loading
+  setTimeout(() => {
+    document.getElementById('loading').style.opacity = '0';
+    document.getElementById('loading').style.transition = 'opacity 0.5s';
+    setTimeout(() => document.getElementById('loading').style.display = 'none', 500);
+  }, 600);
+}
+
+window.addEventListener('load', () => {
+  if (typeof GRAPH_DATA !== 'undefined') initUI();
+  else console.error('GRAPH_DATA missing');
+});
+</script>
+</body>
+</html>
